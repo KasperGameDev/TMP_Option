@@ -81,12 +81,15 @@ public class SettingData : MonoBehaviour
 	[Serializable]
 	public class SliderSetting : Setting<float>
 	{
+		public float min = 0.0f, max = 1.0f;
+
 		public SliderSetting(string name) : base(name)
 		{
 			value = PlayerPrefs.GetFloat(name);
 		}
 		public override void Set(float value)
 		{
+			value = Mathf.Clamp(value, min, max);
 			base.Set(value);
 			PlayerPrefs.SetFloat(name, value);
 		}
@@ -96,7 +99,6 @@ public class SettingData : MonoBehaviour
 	public class ButtonSetting : Setting<Action>
 	{
 		public string text;
-		public bool isRed;
 
 		public ButtonSetting(string name) : base(name)
 		{
@@ -107,8 +109,6 @@ public class SettingData : MonoBehaviour
 			base.Set(value);
 			onSave = null;
 		}
-		public override void Apply()
-		{
-		}
+		public override void Apply() { }
 	}
 }

@@ -3,20 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using static SettingData;
 
 public class SettingUI : MonoBehaviour
 {
-	private TextMeshProUGUI text;
+	private TextMeshProUGUI label;
 
 	private void Awake()
 	{
-		text = GetComponentInChildren<TextMeshProUGUI>();
+		label = GetComponentInChildren<TextMeshProUGUI>();
 	}
 
 	public void Setup(Setting setting)
 	{
-		text.SetText(setting.name);
+		foreach (Transform child in transform)
+			child.gameObject.SetActive(false);
+
+		label.gameObject.SetActive(true);
+		label.SetText(setting.name);
 
 		switch (setting)
 		{
@@ -40,22 +45,26 @@ public class SettingUI : MonoBehaviour
 
 	private void Setup(ToggleSetting setting)
 	{
-		//var toggle = GetComponentInChildren<Toggle>();
-		//toggle.SetValue(setting.Get());
-		//toggle.onValueChanged.AddListener(v => setting.Set(v));
+		var toggle = GetComponentInChildren<Toggle>(true);
+		toggle.gameObject.SetActive(true);
+		toggle.isOn = setting.Get();
+		toggle.onValueChanged.AddListener(v => setting.Set(v));
 	}
 
 	private void Setup(SliderSetting setting)
 	{
-		//var slider = GetComponentInChildren<Slider>();
-		//slider.SetValue(setting.Get());
-		//slider.onValueChanged.AddListener(v => setting.Set(v));
+		var slider = GetComponentInChildren<Slider>(true);
+		slider.gameObject.SetActive(true);
+		slider.minValue = setting.min;
+		slider.maxValue = setting.max;
+		slider.value = setting.Get();
+		slider.onValueChanged.AddListener(v => setting.Set(v));
 	}
 
 	private void Setup(ButtonSetting setting)
 	{
-		//var button = GetComponentInChildren<Button>();
-		//button.SetRed(setting.isRed);
-		//button.SetValue(setting.Get(), setting.text);
+		var button = GetComponentInChildren<Button>(true);
+		button.gameObject.SetActive(true);
+		button.onClick.AddListener(() => setting.Get().Invoke());
 	}
 }

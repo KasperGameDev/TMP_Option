@@ -32,11 +32,27 @@ public class SettingsMenu : MonoBehaviour
 
 		var test = new List<Setting>()
 		{
-			new OptionSetting("Test")
+			new OptionSetting("Dropdown")
 			{
-				options = new string[] { "Test 1", "Test 2", "Test 3"},
-				onSave = i => print($"Test {i+1}"),
+				options = new string[] { "Test 1", "Test 2", "Test 3" },
+				onSave = i => print($"Dropdown {i}"),
 				defaultValue = 1,
+			},
+			new ToggleSetting("Toggle")
+			{
+				onSave = b => print($"Toggle {b}"),
+				defaultValue = true,
+			},
+			new SliderSetting("Slider")
+			{
+				min = 0f,
+				max = 100f,
+				onSave = f => print($"Slider {f}"),
+				defaultValue = 50f,
+			},
+			new ButtonSetting("Button")
+			{
+				defaultValue = () => print("Button pressed")
 			}
 		};
 
