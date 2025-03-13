@@ -20,7 +20,7 @@ public class SettingsMenu : MonoBehaviour
 			// Set the game to the second monitor (index 1)
 			Display.displays[1].Activate();
 		}
-				
+
 		RenderSettings.fogMode = FogMode.Linear;
 		RenderSettings.fogStartDistance = 1f;
 		RenderSettings.fogEndDistance = 1000f;
@@ -31,7 +31,7 @@ public class SettingsMenu : MonoBehaviour
 		{
 			data.shadowCascadeCount = 2;
 			data.shadowDistance = 150f;
-			UnityGraphicsHack.SoftShadowsEnabled = false;
+			UnityGraphicsHack.SoftShadowsEnabled = true;
 			UnityGraphicsHack.MainLightShadowResolution = ShadowResolution._256;
 			UnityGraphicsHack.AdditionalLightShadowResolution = ShadowResolution._256;
 			data.msaaSampleCount = 4;
