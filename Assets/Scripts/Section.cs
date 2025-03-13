@@ -6,9 +6,12 @@ using static SettingData;
 
 public class Section : MonoBehaviour
 {
-	[SerializeField] private SettingUI settingPrefab;
+	public string Title { get; set; }
 
-	public void Populate(List<Setting> settings)
+	[SerializeField] 
+	private SettingUI settingPrefab;
+
+	public void Populate(IEnumerable<Setting> settings)
 	{
 		ClearSettings();
 		CreateSettings(settings);
@@ -20,7 +23,7 @@ public class Section : MonoBehaviour
 			Destroy(child.gameObject);
 	}
 
-	private void CreateSettings(List<Setting> settings)
+	private void CreateSettings(IEnumerable<Setting> settings)
 	{
 		foreach (var setting in settings)
 		{

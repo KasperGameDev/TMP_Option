@@ -23,6 +23,7 @@ public class SettingUI : MonoBehaviour
 		label.gameObject.SetActive(true);
 		label.SetText(setting.name);
 		transform.name = $"Setting ({setting.name})";
+		setting.forceUpdate = () => Setup(setting);
 
 		switch (setting)
 		{
@@ -37,19 +38,11 @@ public class SettingUI : MonoBehaviour
 	private void Setup(OptionSetting setting)
 	{
 		var dropdown = transform.GetComponentInChildren<TMP_Dropdown>(true);
-		setting.forceUpdate = UpdateDropdown;
-		UpdateDropdown();
-
-		void UpdateDropdown()
-		{
-			print(dropdown);
-			print(string.Join(',', setting.options.Select(o => o.ToString())));
-			dropdown.gameObject.SetActive(true);
-			dropdown.ClearOptions();
-			dropdown.AddOptions(setting.options.ToList());
-			dropdown.value = setting.Get();
-			dropdown.onValueChanged.AddListener(v => setting.Set(v));
-		}
+		dropdown.gameObject.SetActive(true);
+		dropdown.ClearOptions();
+		dropdown.AddOptions(setting.options.ToList());
+		dropdown.value = setting.Get();
+		dropdown.onValueChanged.AddListener(v => setting.Set(v));
 	}
 
 	private void Setup(ToggleSetting setting)
