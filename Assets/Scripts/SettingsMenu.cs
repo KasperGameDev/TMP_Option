@@ -7,6 +7,8 @@ using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
 using TMPro;
 using System.Linq;
+using System;
+using System.Threading.Tasks;
 
 public class SettingsMenu : MonoBehaviour
 {
@@ -35,12 +37,10 @@ public class SettingsMenu : MonoBehaviour
 			Initialize();
 	}
 
-	private void Initialize()
+	private void UpdateResolutionData()
 	{
-		Destroy(scrollRect.content.gameObject);
-		initialized = true;
-
-		QualitySettings.vSyncCount = 0;
+		resolutions.Clear();
+		legalRefreshRates.Clear();
 		foreach (var r in Screen.resolutions)
 		{
 			var k = $"{r.width}x{r.height}";
@@ -48,14 +48,56 @@ public class SettingsMenu : MonoBehaviour
 			if (!legalRefreshRates.ContainsKey(k))
 			{
 				resolutions.Add(r);
-				legalRefreshRates.Add(k, new ());
+				legalRefreshRates.Add(k, new());
 			}
-		
-			legalRefreshRates[k].Add(r.refreshRateRatio);
-		}
 
+			legalRefreshRates[k].Add(r.refreshRateRatio);
+			debugText.text += $"\n{r.width}x{r.height}@{r.refreshRateRatio}";
+		}
+	}
+
+	async Task MoveWindowTask(int index)
+	{
+		List<DisplayInfo> displayLayout = new List<DisplayInfo>();
+		Screen.GetDisplayLayout(displayLayout);
+		if (index < displayLayout.Count)
+		{
+			DisplayInfo display = displayLayout[index];
+			Vector2Int position = new Vector2Int(0, 0);
+			if (Screen.fullScreenMode != FullScreenMode.Windowed)
+			{
+				position.x += display.width / 2;
+				position.y += display.height / 2;
+			}
+			AsyncOperation asyncOperation = Screen.MoveMainWindowTo(display, position);
+			while (asyncOperation.progress < 1f)
+			{
+				await Task.Yield();
+			}
+			Screen.SetResolution(display.width, display.width, fullScreenMode, display.refreshRate);
+			debugText.text = $"Display {index}";
+		}
+		else
+		{
+			await Task.CompletedTask;
+		}
+	}
+
+	async void MoveWindowAsync(int index)
+	{
+		await MoveWindowTask(index);
+	}
+
+	private void Initialize()
+	{
+		Destroy(scrollRect.content.gameObject);
+		initialized = true;
+
+		QualitySettings.vSyncCount = 0;
+		UpdateResolutionData();
 
 		var idx = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetInt("Resolution") : resolutions.Count - 1;
+		idx = Mathf.Clamp(idx, 0, resolutions.Count - 1);
 		var res = resolutions[idx];
 		var key = $"{res.width}x{res.height}";
 
@@ -69,7 +111,7 @@ public class SettingsMenu : MonoBehaviour
 				var key = $"{res.width}x{res.height}";
 				var hz = legalRefreshRates[key][i];
 				Screen.SetResolution(res.width, res.height, fullScreenMode, hz);
-				debugText.text = $"{res.width}x{res.height}@{hz}";
+				//debugText.text = $"{res.width}x{res.height}@{hz}";
 			},
 			defaultValue = legalRefreshRates[key].Count - 1,
 		};
@@ -87,20 +129,52 @@ public class SettingsMenu : MonoBehaviour
 
 				refreshRateSetting.options = legalRefreshRates[key].Select(r => r.value.ToString("F2")).ToArray();
 				refreshRateSetting.Set(legalRefreshRates[key].Count - 1);
-
-				debugText.text = $"{res.width}x{res.height}@{hz}\n\n";
-				debugText.text += "Possible resolutions:\n";
-				debugText.text += string.Join("\n", Screen.resolutions
-					.Where(r => r.width == res.width && r.height == res.height)
-					.Select(r => $"{res.width}x{res.height}@{res.refreshRateRatio}"));
+				refreshRateSetting.forceUpdate?.Invoke();
 			},
 			defaultValue = resolutions.Count - 1,
 		};
 
+
+		int displayCount = Display.displays.Length;
+		int displayIndex = Display.displays.ToList().FindIndex(d => d.active);
+
+		var displaySetting = new OptionSetting("Monitor")
+		{
+			options = Enumerable.Range(1, displayCount).Select(i => $"{i}").ToArray(),
+			onSave = async i =>
+			{
+				await MoveWindowTask(i);
+				UpdateResolutionData();
+
+				var res = resolutions[resolutions.Count - 1];
+				var key = $"{res.width}x{res.height}";
+
+				resolutionSetting.options = resolutions.Select(r => $"{r.width}x{r.height}").ToArray();
+				resolutionSetting.Set(resolutions.Count - 1);
+				resolutionSetting.forceUpdate?.Invoke();
+
+				refreshRateSetting.options = legalRefreshRates[key].Select(r => r.value.ToString("F2")).ToArray();
+				refreshRateSetting.Set(legalRefreshRates[key].Count - 1);
+				refreshRateSetting.forceUpdate?.Invoke();
+			},
+			defaultValue = displayIndex,
+		};
+
 		var test = new List<Setting>()
 		{
+			
+			new ButtonSetting("Reset")
+			{
+				text = "Reset",
+				defaultValue = () =>
+				{
+					print("Reset");
+					PlayerPrefs.DeleteAll();
+				}
+			},
 			resolutionSetting,
 			refreshRateSetting,
+			displaySetting,
 			//new OptionSetting("Dropdown")
 			//{
 			//	options = new string[] { "Test 1", "Test 2", "Test 3" },

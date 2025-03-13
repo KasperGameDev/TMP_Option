@@ -7,6 +7,7 @@ public class SettingData : MonoBehaviour
 	public abstract class Setting
 	{
 		public string name;
+		public Action forceUpdate;
 
 		public Setting(string name)
 		{
@@ -59,8 +60,8 @@ public class SettingData : MonoBehaviour
 		}
 		public override void Set(int value)
 		{
-			base.Set(value);
 			PlayerPrefs.SetInt(name, value);
+			base.Set(value);
 		}
 	}
 
@@ -73,8 +74,8 @@ public class SettingData : MonoBehaviour
 		}
 		public override void Set(bool value)
 		{
-			base.Set(value);
 			PlayerPrefs.SetInt(name, value ? 1 : 0);
+			base.Set(value);
 		}
 	}
 
@@ -90,8 +91,8 @@ public class SettingData : MonoBehaviour
 		public override void Set(float value)
 		{
 			value = Mathf.Clamp(value, min, max);
-			base.Set(value);
 			PlayerPrefs.SetFloat(name, value);
+			base.Set(value);
 		}
 	}
 

@@ -37,11 +37,19 @@ public class SettingUI : MonoBehaviour
 	private void Setup(OptionSetting setting)
 	{
 		var dropdown = transform.GetComponentInChildren<TMP_Dropdown>(true);
-		dropdown.gameObject.SetActive(true);
-		dropdown.ClearOptions();
-		dropdown.AddOptions(setting.options.ToList());
-		dropdown.value = setting.Get();
-		dropdown.onValueChanged.AddListener(v => setting.Set(v));
+		setting.forceUpdate = UpdateDropdown;
+		UpdateDropdown();
+
+		void UpdateDropdown()
+		{
+			print(dropdown);
+			print(string.Join(',', setting.options.Select(o => o.ToString())));
+			dropdown.gameObject.SetActive(true);
+			dropdown.ClearOptions();
+			dropdown.AddOptions(setting.options.ToList());
+			dropdown.value = setting.Get();
+			dropdown.onValueChanged.AddListener(v => setting.Set(v));
+		}
 	}
 
 	private void Setup(ToggleSetting setting)
@@ -67,5 +75,6 @@ public class SettingUI : MonoBehaviour
 		var button = GetComponentInChildren<Button>(true);
 		button.gameObject.SetActive(true);
 		button.onClick.AddListener(() => setting.Get().Invoke());
+		button.GetComponentInChildren<TextMeshProUGUI>().SetText(setting.name);
 	}
 }
