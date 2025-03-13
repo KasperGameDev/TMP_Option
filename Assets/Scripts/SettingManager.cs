@@ -8,16 +8,17 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
+using UnityEngine.SceneManagement;
 
 public static class SettingManager
 {
-	[SerializeField]
-	private static VolumeProfile volumeProfile;
 
 	public static List<Setting> DisplaySettings { get; private set; }
 	public static List<Setting> GraphicSettings { get; private set; }
 	public static List<Setting> PostProcessingSettings { get; private set; }
 	public static List<Setting> AudioSettings { get; private set; }
+
+	private static VolumeProfile volumeProfile;
 
 	// Display 
 	private static FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
@@ -25,12 +26,47 @@ public static class SettingManager
 	private static Dictionary<string, List<RefreshRate>> legalRefreshRates = new();
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-	private static void Initialize()
+	private static async Task Initialize()
 	{
 		DisplaySettings = CreateDisplaySettings();
 		GraphicSettings = CreateGraphicsSettings();
 		PostProcessingSettings = new ();
 		AudioSettings = new ();
+
+		FindVolume();
+		if (volumeProfile != null)
+			PostProcessingSettings = CreatePostProcessingSettings();
+	}
+
+	private static void FindVolume()
+	{
+		var volumes = SceneManager.GetActiveScene()
+			.GetRootGameObjects()
+			.Select(g => g.GetComponent<Volume>())
+			.Where(v => v != null);
+
+		if (volumes.Count() > 1)
+		{
+			Debug.LogError("Multiple volumes found!");
+			return;
+		}
+
+		var volume = volumes.FirstOrDefault();
+
+		if (volume != null)
+		{
+			volumeProfile = volume.profile;
+			
+			if (volumeProfile != null && volume.profile != volume)
+			{
+				Debug.LogWarning("Volume profile changed!");
+				volumeProfile = volume.profile;
+			}
+		}
+		else
+		{
+			Debug.LogError("Volume could not be found!");
+		}
 	}
 
 	private static void UpdateResolutionData()
@@ -153,7 +189,7 @@ public static class SettingManager
 			defaultValue = (int)FullScreenMode.FullScreenWindow,
 		};
 
-		var fpsMaxTargets = new[] { 4, 30, 60, 90, 120, 144, 165, 180, 240, -1 };
+		var fpsMaxTargets = new[] { 30, 60, 90, 120, 144, 165, 180, 240, -1 };
 		var fpsMaxOptions = fpsMaxTargets.Select(i => $"{i}").ToArray();
 		fpsMaxOptions[fpsMaxOptions.Length - 1] = "Unlimited";
 
@@ -167,7 +203,7 @@ public static class SettingManager
 		var vSyncSetting = new ToggleSetting("VSync")
 		{
 			onSave = v => QualitySettings.vSyncCount = v ? 1 : 0,
-			defaultValue = false,
+			defaultValue = true,
 		};
 
 		return new () 
@@ -189,17 +225,6 @@ public static class SettingManager
 			Debug.LogError("URP Asset couldn't be found!");
 			return new List<Setting>();
 		}
-
-		data.shadowCascadeCount = 2;
-		data.shadowDistance = 150f;
-		UnityGraphicsHack.SoftShadowsEnabled = true;
-		UnityGraphicsHack.MainLightShadowResolution = ShadowResolution._256;
-		UnityGraphicsHack.AdditionalLightShadowResolution = ShadowResolution._256;
-		data.msaaSampleCount = 4;
-
-		//var msaa = new[] { 1, 2, 4, 8 };
-		//var msaaOptions = msaa.Select(i => $"{i}x").ToArray();
-		//msaaOptions[0] = "Disabled";
 
 		var shadowRes = Enum.GetValues(typeof(ShadowResolution)).Cast<ShadowResolution>().ToList();
 		var msaa = Enum.GetValues(typeof(MsaaQuality)).Cast<MsaaQuality>().ToList();
@@ -236,12 +261,153 @@ public static class SettingManager
 			defaultValue = (int)MsaaQuality._2x,
 		};
 
+		var fogModeSetting = new OptionSetting("Fog Mode")
+		{
+			options = Enum.GetNames(typeof(FogMode)).Select(r => $"{r}").ToArray(),
+			onSave = v => RenderSettings.fogMode = (FogMode)(v+1),
+			defaultValue = (int)FogMode.Linear,
+		};
+
+		var fogSliderSetting = new SliderSetting("Fog Distance")
+		{
+			min = 100f,
+			max = 1000f,
+			onSave = v => RenderSettings.fogEndDistance = v,
+			defaultValue = 1000f,
+		};
+
 		return new ()
 		{
 			shadowResolutionSetting,
 			shadowDistanceSetting,
 			softShadowsSetting,
 			msaaSetting,
+			fogModeSetting,
+			fogSliderSetting
 		};
+	}
+	
+	private static List<Setting> CreatePostProcessingSettings()
+	{
+
+		var brightnessSetting = new SliderSetting("Brightness")
+		{
+			min = -5f,
+			max = 5f,
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out ColorAdjustments colorAdjustments))
+				{
+					colorAdjustments.postExposure.value = v;
+				}
+			},
+			defaultValue = 0f,
+		};
+		var bloomSetting = new ToggleSetting("Bloom")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out Bloom bloom))
+				{
+					bloom.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var chromeSetting = new ToggleSetting("Chromatic Aberration")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out ChromaticAberration chromaticAberration))
+				{
+					chromaticAberration.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var depthOfFieldSetting = new ToggleSetting("Depth of Field")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out DepthOfField depthOfField))
+				{
+					depthOfField.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var filmGrainSetting = new ToggleSetting("Film Grain")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out FilmGrain filmGrain))
+				{
+					filmGrain.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var lensDistortionSetting = new ToggleSetting("Lens Distortion")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out LensDistortion lensDistortion))
+				{
+					lensDistortion.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var motionBlurSetting = new ToggleSetting("Motion Blur")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out MotionBlur motionBlur))
+				{
+					motionBlur.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var paniniProjectionSetting = new ToggleSetting("Panini Projection")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out PaniniProjection paniniProjection))
+				{
+					paniniProjection.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+		var vignetteSetting = new ToggleSetting("Vignette")
+		{
+			onSave = v =>
+			{
+				if (volumeProfile.TryGet(out Vignette vignette))
+				{
+					vignette.active = v;
+				}
+			},
+			defaultValue = true,
+		};
+
+		DisplaySettings.Add(brightnessSetting);
+		return new () 
+		{
+			bloomSetting,
+			chromeSetting,
+			depthOfFieldSetting,
+			filmGrainSetting,
+			lensDistortionSetting,
+			motionBlurSetting,
+			paniniProjectionSetting,
+			vignetteSetting
+		};
+	}
+
+	private static List<Setting> CreateAudioSettings()
+	{
+		return new();
 	}
 }
