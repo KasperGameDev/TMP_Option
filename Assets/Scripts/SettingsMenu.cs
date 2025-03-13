@@ -2,11 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using System.Collections.Generic;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
 using TMPro;
 using System.Linq;
+using System.Collections;
+using System.Collections.Generic;
 
 public class SettingsMenu : MonoBehaviour
 {
@@ -40,14 +41,14 @@ public class SettingsMenu : MonoBehaviour
 		initialized = true;
 
 		display = CreateSection("Display", SettingManager.DisplaySettings);
-		graphics = CreateSection("Graphics", SettingManager.GraphicsSettings);
+		graphics = CreateSection("Graphics", SettingManager.GraphicSettings);
 		postProcessing = CreateSection("Post Processing", SettingManager.PostProcessingSettings);
 		audio = CreateSection("Audio", SettingManager.AudioSettings);
 		sections = new Section[] { display, graphics, postProcessing, audio };
 
 		OpenSection(display);
 
-		Section CreateSection(string title, Setting[] settings)
+		Section CreateSection(string title, IEnumerable<Setting> settings)
 		{
 			var section = Instantiate(sectionPrefab, scrollRect.viewport.transform);
 			section.name = $"Section ({title})";
@@ -112,6 +113,7 @@ public class SettingsMenu : MonoBehaviour
 			// Adjust the brightness (Exposure)
 			colorAdjustments.postExposure.value = 1.5f;
 		}
+
 		/*
 		 https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@14.0/manual/quality/quality-settings-through-code.html
 		 */
