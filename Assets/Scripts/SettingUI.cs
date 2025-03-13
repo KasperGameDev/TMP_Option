@@ -22,6 +22,7 @@ public class SettingUI : MonoBehaviour
 
 		label.gameObject.SetActive(true);
 		label.SetText(setting.name);
+		transform.name = $"Setting ({setting.name})";
 
 		switch (setting)
 		{
