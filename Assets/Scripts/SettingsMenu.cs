@@ -8,6 +8,7 @@ using TMPro;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class SettingsMenu : MonoBehaviour
 {
@@ -21,8 +22,8 @@ public class SettingsMenu : MonoBehaviour
 	private bool initialized = false;
 	private ScrollRect scrollRect;
 
-	private Section display, graphics, postProcessing, audio;
-	private Section[] sections;
+	private Section general, display, graphics, postProcessing, audio;
+	private List<Section> sections = new();
 
 	private void Awake()
 	{
@@ -40,13 +41,13 @@ public class SettingsMenu : MonoBehaviour
 		Destroy(scrollRect.content.gameObject);
 		initialized = true;
 
+		general = CreateSection("General", SettingManager.GeneralSettings);
 		display = CreateSection("Display", SettingManager.DisplaySettings);
 		graphics = CreateSection("Graphics", SettingManager.GraphicSettings);
 		postProcessing = CreateSection("Post Processing", SettingManager.PostProcessingSettings);
 		audio = CreateSection("Audio", SettingManager.AudioSettings);
-		sections = new Section[] { display, graphics, postProcessing, audio };
 
-		OpenSection(display);
+		OpenSection(general);
 
 		Section CreateSection(string title, IEnumerable<Setting> settings)
 		{
@@ -55,6 +56,7 @@ public class SettingsMenu : MonoBehaviour
 			section.Title = title;
 			section.Populate(settings);
 			section.gameObject.SetActive(false);
+			sections.Add(section);
 			return section;
 		}
 	}
@@ -65,7 +67,7 @@ public class SettingsMenu : MonoBehaviour
 		if (section)
 			OpenSection(section);
 		else
-			Debug.LogError($"Couldn't find section: {name}");
+			Debug.LogError($"Couldn't find section: {title}");
 	}
 
 	private void OpenSection(Section section)
@@ -77,45 +79,5 @@ public class SettingsMenu : MonoBehaviour
 
 		titleText.text = section.Title;
 		scrollRect.content = section.transform as RectTransform;
-	}
-
-	private void Test()
-	{
-		volume.profile.TryGet(out Bloom bloom);
-		bloom.active = true;
-
-		Application.targetFrameRate = 60;
-		int displayCount = Display.displays.Length;
-		if (displayCount > 1)
-		{
-			// Set the game to the second monitor (index 1)
-			Display.displays[1].Activate();
-		}
-
-		RenderSettings.fogMode = FogMode.Linear;
-		RenderSettings.fogStartDistance = 1f;
-		RenderSettings.fogEndDistance = 1000f;
-
-		UniversalRenderPipelineAsset data = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-
-		if (data)
-		{
-			data.shadowCascadeCount = 2;
-			data.shadowDistance = 150f;
-			UnityGraphicsHack.SoftShadowsEnabled = true;
-			UnityGraphicsHack.MainLightShadowResolution = ShadowResolution._256;
-			UnityGraphicsHack.AdditionalLightShadowResolution = ShadowResolution._256;
-			data.msaaSampleCount = 4;
-		}
-
-		if (volume.profile.TryGet(out ColorAdjustments colorAdjustments))
-		{
-			// Adjust the brightness (Exposure)
-			colorAdjustments.postExposure.value = 1.5f;
-		}
-
-		/*
-		 https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@14.0/manual/quality/quality-settings-through-code.html
-		 */
 	}
 }

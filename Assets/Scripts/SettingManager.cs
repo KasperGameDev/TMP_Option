@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 public static class SettingManager
 {
 
+	public static List<Setting> GeneralSettings { get; private set; }
 	public static List<Setting> DisplaySettings { get; private set; }
 	public static List<Setting> GraphicSettings { get; private set; }
 	public static List<Setting> PostProcessingSettings { get; private set; }
@@ -26,16 +27,15 @@ public static class SettingManager
 	private static Dictionary<string, List<RefreshRate>> legalRefreshRates = new();
 
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-	private static async Task Initialize()
+	private static void Initialize()
 	{
+		GeneralSettings = CreateGeneralSettings();
 		DisplaySettings = CreateDisplaySettings();
 		GraphicSettings = CreateGraphicsSettings();
+		AudioSettings	= CreateAudioSettings();
 		PostProcessingSettings = new ();
-		AudioSettings = new ();
 
-		FindVolume();
-		if (volumeProfile != null)
-			PostProcessingSettings = CreatePostProcessingSettings();
+		SceneManager.sceneLoaded += (_,_) => FindVolume();
 	}
 
 	private static void FindVolume()
@@ -67,6 +67,9 @@ public static class SettingManager
 		{
 			Debug.LogError("Volume could not be found!");
 		}
+
+		if (volumeProfile != null)
+			PostProcessingSettings = CreatePostProcessingSettings();
 	}
 
 	private static void UpdateResolutionData()
@@ -185,7 +188,12 @@ public static class SettingManager
 		var fullscreenSetting = new OptionSetting("Fullscreen Mode")
 		{
 			options = Enum.GetNames(typeof(FullScreenMode)),
-			onSave = v => fullScreenMode = (FullScreenMode)v,
+			onSave = v =>
+			{
+				fullScreenMode = (FullScreenMode)v;
+				// do this with cur res + cur hz
+				//Screen.SetResolution(res.width, res.height, fullScreenMode, res.refreshRateRatio);
+			},
 			defaultValue = (int)FullScreenMode.FullScreenWindow,
 		};
 
@@ -208,9 +216,10 @@ public static class SettingManager
 
 		return new () 
 		{ 
-			displaySetting, 
+			fullscreenSetting,
 			resolutionSetting, 
 			refreshRateSetting,
+			displaySetting, 
 			fpsMaxSetting,
 			vSyncSetting
 		};
@@ -409,5 +418,18 @@ public static class SettingManager
 	private static List<Setting> CreateAudioSettings()
 	{
 		return new();
+	}
+
+	private static List<Setting> CreateGeneralSettings()
+	{
+		var resetSetting = new ButtonSetting("Reset")
+		{
+			text = "Reset",
+			defaultValue = PlayerPrefs.DeleteAll,
+		};
+		return new()
+		{
+			resetSetting,
+		};
 	}
 }
