@@ -19,8 +19,6 @@ public static class SettingManager
 	public static List<Setting> AudioSettings { get; private set; }
 
 	private static VolumeProfile volumeProfile;
-
-	// Display 
 	private static FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
 	private static List<Resolution> resolutions = new();
 	private static Dictionary<string, List<RefreshRate>> legalRefreshRates = new();
@@ -131,6 +129,16 @@ public static class SettingManager
 
 	private static List<Setting> CreateGeneralSettings()
 	{
+		var audioLanguageSetting = new OptionSetting("Audio Language")
+		{
+			options = new string[] { "English", "Danish", "Whatever Dany is working on" },
+			onSave = i => { },
+		};
+		var subtitleLanguageSetting = new OptionSetting("Subtitle Language")
+		{
+			options = new string[] { "English", "Danish", "Whatever Dany is working on" },
+			onSave = i => { },
+		};
 		var resetSetting = new ButtonSetting("Reset")
 		{
 			text = "Reset",
@@ -139,6 +147,8 @@ public static class SettingManager
 		return new()
 		{
 			resetSetting,
+			audioLanguageSetting,
+			subtitleLanguageSetting
 		};
 	}
 
