@@ -1,14 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
-using UnityEngine.SceneManagement;
 
 public static class SettingManager
 {
@@ -29,6 +28,8 @@ public static class SettingManager
 	[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 	private static void Initialize()
 	{
+		Reset();
+
 		GeneralSettings = CreateGeneralSettings();
 		DisplaySettings = CreateDisplaySettings();
 		GraphicSettings = CreateGraphicsSettings();
@@ -36,6 +37,16 @@ public static class SettingManager
 		PostProcessingSettings = new ();
 
 		SceneManager.sceneLoaded += (_,_) => FindVolume();
+	}
+
+	private static void Reset()
+	{
+		GeneralSettings = null;
+		DisplaySettings = null;
+		GraphicSettings = null;
+		AudioSettings = null;
+		PostProcessingSettings = null;
+		volumeProfile = null;
 	}
 
 	private static void FindVolume()
@@ -116,6 +127,19 @@ public static class SettingManager
 		{
 			await Task.CompletedTask;
 		}
+	}
+
+	private static List<Setting> CreateGeneralSettings()
+	{
+		var resetSetting = new ButtonSetting("Reset")
+		{
+			text = "Reset",
+			defaultValue = PlayerPrefs.DeleteAll,
+		};
+		return new()
+		{
+			resetSetting,
+		};
 	}
 
 	private static List<Setting> CreateDisplaySettings()
@@ -419,19 +443,46 @@ public static class SettingManager
 
 	private static List<Setting> CreateAudioSettings()
 	{
-		return new();
-	}
-
-	private static List<Setting> CreateGeneralSettings()
-	{
-		var resetSetting = new ButtonSetting("Reset")
+		var masterSetting = new SliderSetting("Master")
 		{
-			text = "Reset",
-			defaultValue = PlayerPrefs.DeleteAll,
+			min = 0f,
+			max = 1f,
+			onSave = v => AudioListener.volume = v,
+			defaultValue = 1f,
+		};
+		var sfxSetting = new SliderSetting("SFX")
+		{
+			min = 0f,
+			max = 1f,
+			onSave = v => AudioListener.volume = v,
+			defaultValue = 1f,
+		};
+		var musicSetting = new SliderSetting("Music")
+		{
+			min = 0f,
+			max = 1f,
+			onSave = v => AudioListener.volume = v,
+			defaultValue = 1f,
+		};
+		var dialogueSetting = new SliderSetting("Dialogue")
+		{
+			min = 0f,
+			max = 1f,
+			onSave = v => AudioListener.volume = v,
+			defaultValue = 1f,
+		};
+		var muteSetting = new ToggleSetting("Mute")
+		{
+			onSave = v => AudioListener.pause = v,
+			defaultValue = false,
 		};
 		return new()
 		{
-			resetSetting,
+			masterSetting,
+			sfxSetting,
+			musicSetting,
+			dialogueSetting,
+			muteSetting,
 		};
 	}
 }
