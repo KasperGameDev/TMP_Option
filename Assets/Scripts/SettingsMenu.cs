@@ -34,6 +34,15 @@ public class SettingsMenu : MonoBehaviour
 	{
 		if (!initialized)
 			Initialize();
+
+		List<DisplayInfo> displayLayout = new List<DisplayInfo>();
+		Screen.GetDisplayLayout(displayLayout);
+
+		debugText.text = "DISPLAYS: " + Display.displays.Length;
+		debugText.text += "\nDISPLAYS_LAYOUT: " + displayLayout.Count;
+		foreach (var display in displayLayout)
+			debugText.text += "\nDISPLAYS_LAYOUT: " + display.name;
+
 	}
 
 	private void Initialize()

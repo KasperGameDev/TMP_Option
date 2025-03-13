@@ -160,7 +160,9 @@ public static class SettingManager
 			defaultValue = resolutions.Count - 1,
 		};
 
-		int displayCount = Display.displays.Length;
+		List<DisplayInfo> displayLayout = new List<DisplayInfo>();
+		Screen.GetDisplayLayout(displayLayout);
+		int displayCount = displayLayout.Count;
 		int displayIndex = Display.displays.ToList().FindIndex(d => d.active);
 
 		var displaySetting = new OptionSetting("Monitor")
