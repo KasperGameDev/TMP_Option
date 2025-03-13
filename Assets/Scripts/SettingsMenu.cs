@@ -1,14 +1,58 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using System.Collections.Generic;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
+using static SettingData;
 
 public class SettingsMenu : MonoBehaviour
 {
 	public Volume volume;
 	public UniversalRenderPipelineAsset urpAsset;
+	[SerializeField] private Section sectionPrefab;
+
+	private bool initialized = false;
+	private ScrollRect scrollRect;
+
+	private void Awake()
+	{
+		scrollRect = GetComponentInChildren<ScrollRect>();
+	}
 
 	private void Start()
+	{
+		if (!initialized)
+			Initialize();
+	}
+
+	private void Initialize()
+	{
+		initialized = true;
+
+		var test = new List<Setting>()
+		{
+			new OptionSetting("Test")
+			{
+				options = new string[] { "Test 1", "Test 2", "Test 3"},
+				onSave = i => print($"Test {i+1}"),
+				defaultValue = 1,
+			}
+		};
+
+		var sectionTest = CreateSection("Test", test);
+		scrollRect.content = sectionTest.transform as RectTransform;
+
+		Section CreateSection(string title, List<Setting> settings)
+		{
+			var section = Instantiate(sectionPrefab, scrollRect.viewport.transform);
+			section.name = $"Section ({title})";
+			section.Populate(settings);
+			return section;
+		}
+	}
+
+	private void Test()
 	{
 		volume.profile.TryGet(out Bloom bloom);
 		bloom.active = true;
@@ -40,11 +84,10 @@ public class SettingsMenu : MonoBehaviour
 		if (volume.profile.TryGet(out ColorAdjustments colorAdjustments))
 		{
 			// Adjust the brightness (Exposure)
-			colorAdjustments.postExposure.value = 1.5f; 
+			colorAdjustments.postExposure.value = 1.5f;
 		}
+		/*
+		 https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@14.0/manual/quality/quality-settings-through-code.html
+		 */
 	}
 }
-
-/*
- https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@14.0/manual/quality/quality-settings-through-code.html
- */

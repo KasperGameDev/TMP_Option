@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using static SettingData;
@@ -29,10 +30,12 @@ public class SettingUI : MonoBehaviour
 
 	private void Setup(OptionSetting setting)
 	{
-		//var selector = GetComponentInChildren<Selector>();
-		//selector.SetOptions(setting.options);
-		//selector.SetValue(setting.Get());
-		//selector.onSelectionChanged.AddListener(v => setting.Set(v));
+		var dropdown = transform.GetComponentInChildren<TMP_Dropdown>(true);
+		dropdown.gameObject.SetActive(true);
+		dropdown.ClearOptions();
+		dropdown.AddOptions(setting.options.ToList());
+		dropdown.value = setting.Get();
+		dropdown.onValueChanged.AddListener(v => setting.Set(v));
 	}
 
 	private void Setup(ToggleSetting setting)
