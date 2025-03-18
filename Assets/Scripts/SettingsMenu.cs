@@ -22,8 +22,7 @@ public class SettingsMenu : MonoBehaviour
 	private bool initialized = false;
 	private ScrollRect scrollRect;
 
-	private Section general, display, graphics, postProcessing, audio;
-	private List<Section> sections = new();
+	private Dictionary<string, Section> sections = new();
 
 	private void Awake()
 	{
@@ -35,14 +34,16 @@ public class SettingsMenu : MonoBehaviour
 		if (!initialized)
 			Initialize();
 
-		List<DisplayInfo> displayLayout = new List<DisplayInfo>();
-		Screen.GetDisplayLayout(displayLayout);
+		if (debugText != null)
+		{
+			List<DisplayInfo> displayLayout = new List<DisplayInfo>();
+			Screen.GetDisplayLayout(displayLayout);
 
-		debugText.text = "DISPLAYS: " + Display.displays.Length;
-		debugText.text += "\nDISPLAYS_LAYOUT: " + displayLayout.Count;
-		foreach (var display in displayLayout)
-			debugText.text += "\nDISPLAYS_LAYOUT: " + display.name;
-
+			debugText.text = "DISPLAYS: " + Display.displays.Length;
+			debugText.text += "\nDISPLAYS_LAYOUT: " + displayLayout.Count;
+			foreach (var display in displayLayout)
+				debugText.text += "\nDISPLAYS_LAYOUT: " + display.name;
+		}
 	}
 
 	private void Initialize()
@@ -50,13 +51,12 @@ public class SettingsMenu : MonoBehaviour
 		Destroy(scrollRect.content.gameObject);
 		initialized = true;
 
-		general = CreateSection("General", SettingManager.GeneralSettings);
-		display = CreateSection("Display", SettingManager.DisplaySettings);
-		graphics = CreateSection("Graphics", SettingManager.GraphicSettings);
-		postProcessing = CreateSection("Post Processing", SettingManager.PostProcessingSettings);
-		audio = CreateSection("Audio", SettingManager.AudioSettings);
+		foreach (var key in SettingManager.Settings.Keys)
+		{
+			sections[key] = CreateSection(key, SettingManager.Settings[key]);
+		}
 
-		OpenSection(general);
+		OpenSection("General");
 
 		Section CreateSection(string title, IEnumerable<Setting> settings)
 		{
@@ -65,14 +65,13 @@ public class SettingsMenu : MonoBehaviour
 			section.Title = title;
 			section.Populate(settings);
 			section.gameObject.SetActive(false);
-			sections.Add(section);
 			return section;
 		}
 	}
 
 	public void OpenSection(string title)
 	{
-		var section = sections.FirstOrDefault(s => s.Title.ToLower() == title.ToLower());
+		var section = sections[title];
 		if (section)
 			OpenSection(section);
 		else
@@ -81,7 +80,7 @@ public class SettingsMenu : MonoBehaviour
 
 	private void OpenSection(Section section)
 	{
-		foreach (var s in sections)
+		foreach (var s in sections.Values)
 		{
 			s.gameObject.SetActive(s == section);
 		}

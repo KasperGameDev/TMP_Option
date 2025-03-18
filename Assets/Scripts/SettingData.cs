@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class SettingData : MonoBehaviour
 {
-	[Serializable]
 	public abstract class Setting
 	{
 		public string name;
@@ -17,7 +16,6 @@ public class SettingData : MonoBehaviour
 		public abstract void Apply();
 	}
 
-	[Serializable]
 	public class Setting<T> : Setting
 	{
 		public Action<T> onSave;
@@ -49,7 +47,6 @@ public class SettingData : MonoBehaviour
 		}
 	}
 
-	[Serializable]
 	public class OptionSetting : Setting<int>
 	{
 		public string[] options;
@@ -65,7 +62,6 @@ public class SettingData : MonoBehaviour
 		}
 	}
 
-	[Serializable]
 	public class ToggleSetting : Setting<bool>
 	{
 		public ToggleSetting(string name) : base(name)
@@ -79,7 +75,6 @@ public class SettingData : MonoBehaviour
 		}
 	}
 
-	[Serializable]
 	public class SliderSetting : Setting<float>
 	{
 		public float min = 0.0f, max = 1.0f;
@@ -96,7 +91,6 @@ public class SettingData : MonoBehaviour
 		}
 	}
 
-	[Serializable]
 	public class ButtonSetting : Setting<Action>
 	{
 		public string text;
