@@ -34,7 +34,7 @@ public static class SettingManager
 		AudioSettings	= CreateAudioSettings();
 		PostProcessingSettings = new ();
 
-		SceneManager.sceneLoaded += (_,_) => FindVolume();
+		SceneManager.sceneLoaded += FindVolume;
 	}
 
 	private static void Reset()
@@ -47,25 +47,21 @@ public static class SettingManager
 		volumeProfile = null;
 	}
 
-	private static void FindVolume()
+	private static void FindVolume(Scene scene, LoadSceneMode mode)
 	{
-		var volumes = SceneManager.GetActiveScene()
-			.GetRootGameObjects()
-			.Select(g => g.GetComponent<Volume>())
-			.Where(v => v != null);
+		Volume volume = null;
 
-		if (volumes.Count() > 1)
+		for (int i = 0; i < SceneManager.sceneCount; i++)
 		{
-			Debug.LogError("Multiple volumes found!");
-			return;
+			volume = (Volume)GameObject.FindFirstObjectByType(typeof(Volume));
+			if (volume != null)
+				break;
 		}
-
-		var volume = volumes.FirstOrDefault();
 
 		if (volume != null)
 		{
 			volumeProfile = volume.profile;
-			
+
 			if (volumeProfile != null && volume.profile != volume)
 			{
 				Debug.LogWarning("Volume profile changed!");
@@ -78,7 +74,9 @@ public static class SettingManager
 		}
 
 		if (volumeProfile != null)
+		{
 			PostProcessingSettings = CreatePostProcessingSettings();
+		}
 	}
 
 	private static void UpdateResolutionData()
@@ -131,12 +129,12 @@ public static class SettingManager
 	{
 		var audioLanguageSetting = new OptionSetting("Audio Language")
 		{
-			options = new string[] { "English", "Danish", "Whatever Dany is working on" },
+			options = new string[] { "English", "Danish", "Corr" },
 			onSave = i => { },
 		};
 		var subtitleLanguageSetting = new OptionSetting("Subtitle Language")
 		{
-			options = new string[] { "English", "Danish", "Whatever Dany is working on" },
+			options = new string[] { "English", "Danish", "Corr" },
 			onSave = i => { },
 		};
 		var resetSetting = new ButtonSetting("Reset")
@@ -334,6 +332,11 @@ public static class SettingManager
 	
 	private static List<Setting> CreatePostProcessingSettings()
 	{
+		var defaultBrightness = 0f;
+		if (volumeProfile.TryGet(out ColorAdjustments colorAdjustments))
+		{
+			defaultBrightness = colorAdjustments.postExposure.value;
+		}
 
 		var brightnessSetting = new SliderSetting("Brightness")
 		{
@@ -346,99 +349,22 @@ public static class SettingManager
 					colorAdjustments.postExposure.value = v;
 				}
 			},
-			defaultValue = 0f,
-		};
-		var bloomSetting = new ToggleSetting("Bloom")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out Bloom bloom))
-				{
-					bloom.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var chromeSetting = new ToggleSetting("Chromatic Aberration")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out ChromaticAberration chromaticAberration))
-				{
-					chromaticAberration.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var depthOfFieldSetting = new ToggleSetting("Depth of Field")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out DepthOfField depthOfField))
-				{
-					depthOfField.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var filmGrainSetting = new ToggleSetting("Film Grain")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out FilmGrain filmGrain))
-				{
-					filmGrain.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var lensDistortionSetting = new ToggleSetting("Lens Distortion")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out LensDistortion lensDistortion))
-				{
-					lensDistortion.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var motionBlurSetting = new ToggleSetting("Motion Blur")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out MotionBlur motionBlur))
-				{
-					motionBlur.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var paniniProjectionSetting = new ToggleSetting("Panini Projection")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out PaniniProjection paniniProjection))
-				{
-					paniniProjection.active = v;
-				}
-			},
-			defaultValue = true,
-		};
-		var vignetteSetting = new ToggleSetting("Vignette")
-		{
-			onSave = v =>
-			{
-				if (volumeProfile.TryGet(out Vignette vignette))
-				{
-					vignette.active = v;
-				}
-			},
-			defaultValue = true,
+			defaultValue = defaultBrightness,
 		};
 
-		DisplaySettings.Add(brightnessSetting);
-		return new () 
+		if (DisplaySettings.FirstOrDefault(s => s.name == "Brightness") == null)
+			DisplaySettings.Add(brightnessSetting);
+
+		var bloomSetting = CreatePostProcessingSetting<Bloom>();
+		var chromeSetting = CreatePostProcessingSetting<ChromaticAberration>();
+		var depthOfFieldSetting = CreatePostProcessingSetting<DepthOfField>();
+		var filmGrainSetting = CreatePostProcessingSetting<FilmGrain>();
+		var lensDistortionSetting = CreatePostProcessingSetting<LensDistortion>();
+		var motionBlurSetting = CreatePostProcessingSetting<MotionBlur>();
+		var paniniProjectionSetting = CreatePostProcessingSetting<PaniniProjection>();
+		var vignetteSetting = CreatePostProcessingSetting<Vignette>();
+
+		return new List<Setting>()
 		{
 			bloomSetting,
 			chromeSetting,
@@ -448,7 +374,7 @@ public static class SettingManager
 			motionBlurSetting,
 			paniniProjectionSetting,
 			vignetteSetting
-		};
+		}.Where(s => s != null).ToList();
 	}
 
 	private static List<Setting> CreateAudioSettings()
@@ -493,6 +419,32 @@ public static class SettingManager
 			musicSetting,
 			dialogueSetting,
 			muteSetting,
+		};
+	}
+
+	public static Setting CreatePostProcessingSetting<T>(string name = "") where T : VolumeComponent
+	{
+		T component;
+
+		if (volumeProfile == null)
+		{
+			return null;
+		}
+
+		if (!volumeProfile.TryGet(out component))
+		{
+			return null;
+		}
+
+		if (string.IsNullOrEmpty(name))
+		{
+			name = typeof(T).Name;
+		}
+
+		return new ToggleSetting(name)
+		{
+			onSave = v => component.active = v,
+			defaultValue = component.active,
 		};
 	}
 }
