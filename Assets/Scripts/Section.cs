@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using static SettingData;
 
 public class Section : MonoBehaviour
@@ -9,7 +7,7 @@ public class Section : MonoBehaviour
 	public string Title { get; set; }
 
 	[SerializeField] 
-	private SettingUI settingPrefab;
+	private SettingUI _settingPrefab;
 
 	public void Populate(IEnumerable<Setting> settings)
 	{
@@ -27,7 +25,7 @@ public class Section : MonoBehaviour
 	{
 		foreach (var setting in settings)
 		{
-			var ui = Instantiate(settingPrefab, transform); 
+			var ui = Instantiate(_settingPrefab, transform); 
 			ui.Setup(setting);
 		}
 	}

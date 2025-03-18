@@ -8,20 +8,21 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
+using System.Text.RegularExpressions;
 
 public static class SettingManager
 {
 	public static Dictionary<string, List<Setting>> Settings { get; private set; } = new();
 
 	// State
-	private static Resolution curResolution;
-	private static RefreshRate curRefreshRate;
-	private static FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
-	private static VolumeProfile volumeProfile;
+	private static Resolution _currentResolution;
+	private static RefreshRate _currentRefreshRate;
+	private static FullScreenMode _fullScreenMode = FullScreenMode.FullScreenWindow;
+	private static VolumeProfile _volumeProfile;
 
 	// Data
-	private static List<Resolution> resolutions = new();
-	private static Dictionary<string, List<RefreshRate>> legalRefreshRates = new();
+	private static List<Resolution> _resolutions = new();
+	private static Dictionary<string, List<RefreshRate>> _legalRefreshRates = new();
 	private static int[] fpsMaxTargets = new[] { 30, 60, 90, 120, 144, 165, 180, 240, -1 };
 
 	#region Loading
@@ -34,7 +35,7 @@ public static class SettingManager
 	private static void Reset()
 	{
 		Settings.Clear();
-		volumeProfile = null;
+		_volumeProfile = null;
 	}
 
 	public static void CreateSettings()
@@ -65,15 +66,14 @@ public static class SettingManager
 	#region Create Settings
 	private static void CreateGeneralSettings()
 	{
-		var audioLanguageSetting = new OptionSetting("Audio Language")
+		var languageSetting = new OptionSetting("Language")
 		{
-			options = new string[] { "English", "Danish", "Corr" },
+			options = new[] { "English", "Danish" },
+			defaultValue = 0,
 			onSave = i => { },
-		};
-		var subtitleLanguageSetting = new OptionSetting("Subtitle Language")
-		{
-			options = new string[] { "English", "Danish", "Corr" },
-			onSave = i => { },
+			//options = LocalizationSettings.AvailableLocales.Locales.Select(l => Regex.Replace(l.LocaleName, @"\(.*\)", "").Trim()).ToArray(),
+			//onSave = i => { LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[i]; },
+			//defaultValue = LocalizationSettings.AvailableLocales.Locales.IndexOf(LocalizationSettings.ProjectLocale),
 		};
 		var resetSetting = new ButtonSetting("Reset")
 		{
@@ -87,8 +87,7 @@ public static class SettingManager
 
 		Settings["General"] = new()
 		{
-			audioLanguageSetting,
-			subtitleLanguageSetting,
+			languageSetting,
 			resetSetting,
 		};
 	}
@@ -99,9 +98,9 @@ public static class SettingManager
 		UpdateResolutionData();
 
 		// Get current resolution
-		var idx = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetInt("Resolution") : resolutions.Count - 1;
-		idx = Mathf.Clamp(idx, 0, resolutions.Count - 1);
-		curResolution = resolutions[idx];
+		var idx = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetInt("Resolution") : _resolutions.Count - 1;
+		idx = Mathf.Clamp(idx, 0, _resolutions.Count - 1);
+		_currentResolution = _resolutions[idx];
 
 		// Get current display layout
 		List<DisplayInfo> displayLayout = new List<DisplayInfo>();
@@ -118,8 +117,8 @@ public static class SettingManager
 			options = GetCurrentRefreshRates().Select(r => r.value.ToString("F2")).ToArray(),
 			onSave = i =>
 			{
-				var key = ResolutionToKey(curResolution);
-				curRefreshRate = legalRefreshRates[key][i];
+				var key = ResolutionToKey(_currentResolution);
+				_currentRefreshRate = _legalRefreshRates[key][i];
 				SetResolution();
 			},
 			defaultValue = GetCurrentRefreshRates().Count - 1,
@@ -127,21 +126,21 @@ public static class SettingManager
 
 		var resolutionSetting = new OptionSetting("Resolution")
 		{
-			options = resolutions.Select(r => $"{r.width}x{r.height}").ToArray(),
+			options = _resolutions.Select(r => $"{r.width}x{r.height}").ToArray(),
 			onSave = i =>
 			{
 				if (i < 0)
 				{
-					i = resolutions.Count - 1;
+					i = _resolutions.Count - 1;
 				}
-				i = Mathf.Clamp(i, 0, resolutions.Count - 1);
+				i = Mathf.Clamp(i, 0, _resolutions.Count - 1);
 
-				curResolution = resolutions[i];
-				curRefreshRate = GetCurrentRefreshRates().Last();
+				_currentResolution = _resolutions[i];
+				_currentRefreshRate = GetCurrentRefreshRates().Last();
 				SetResolution();
 				UpdateRefreshRateSetting();
 			},
-			defaultValue = resolutions.Count - 1,
+			defaultValue = _resolutions.Count - 1,
 		};
 
 		var displaySetting = new OptionSetting("Monitor")
@@ -162,7 +161,7 @@ public static class SettingManager
 			options = Enum.GetNames(typeof(FullScreenMode)),
 			onSave = v =>
 			{
-				fullScreenMode = (FullScreenMode)v;
+				_fullScreenMode = (FullScreenMode)v;
 				SetResolution();
 			},
 			defaultValue = (int)FullScreenMode.FullScreenWindow,
@@ -181,8 +180,8 @@ public static class SettingManager
 			{
 				var targetFPS = fpsMaxTargets[i];
 				Application.targetFrameRate = targetFPS;
-				vSyncSetting.Set(false);
-				vSyncSetting.forceUpdate?.Invoke();
+				//vSyncSetting.Set(false);
+				//vSyncSetting.forceUpdate?.Invoke();
 			},
 			defaultValue = fpsMaxOptions.Length - 1,
 		};
@@ -197,7 +196,7 @@ public static class SettingManager
 			vSyncSetting,
 		};
 
-		if (volumeProfile.TryGet(out ColorAdjustments colorAdjustments))
+		if (_volumeProfile.TryGet(out ColorAdjustments colorAdjustments))
 		{
 			var brightnessSetting = new SliderSetting("Brightness")
 			{
@@ -221,22 +220,22 @@ public static class SettingManager
 		}
 		void UpdateResolutionSetting()
 		{
-			resolutionSetting.options = resolutions.Select(r => $"{r.width}x{r.height}").ToArray();
-			resolutionSetting.Set(resolutions.Count - 1);
+			resolutionSetting.options = _resolutions.Select(r => $"{r.width}x{r.height}").ToArray();
+			resolutionSetting.Set(_resolutions.Count - 1);
 			resolutionSetting.forceUpdate?.Invoke();
 		}
 		List<RefreshRate> GetCurrentRefreshRates()
 		{
-			var key = ResolutionToKey(curResolution);
-			return legalRefreshRates[key];
+			var key = ResolutionToKey(_currentResolution);
+			return _legalRefreshRates[key];
 		}
 		void SetResolution()
 		{
 			Screen.SetResolution(
-				curResolution.width,
-				curResolution.height,
-				fullScreenMode,
-				curRefreshRate);
+				_currentResolution.width,
+				_currentResolution.height,
+				_fullScreenMode,
+				_currentRefreshRate);
 		}
 	}
 
@@ -313,7 +312,7 @@ public static class SettingManager
 
 	private static void CreatePostProcessingSettings()
 	{
-		if (volumeProfile == null)
+		if (_volumeProfile == null)
 		{
 			Debug.LogError("Couldn't create post processing settings, because there is no available volume.");
 			return;
@@ -391,12 +390,12 @@ public static class SettingManager
 	{
 		T component;
 
-		if (volumeProfile == null)
+		if (_volumeProfile == null)
 		{
 			return null;
 		}
 
-		if (!volumeProfile.TryGet(out component))
+		if (!_volumeProfile.TryGet(out component))
 		{
 			return null;
 		}
@@ -423,17 +422,19 @@ public static class SettingManager
 		{
 			volume = (Volume)GameObject.FindFirstObjectByType(typeof(Volume));
 			if (volume != null)
+			{
 				break;
+			}
 		}
 
 		if (volume != null)
 		{
-			volumeProfile = volume.profile;
+			_volumeProfile = volume.profile;
 
-			if (volumeProfile != null && volume.profile != volume)
+			if (_volumeProfile != null && volume.profile != volume)
 			{
 				Debug.LogWarning("Volume profile changed!");
-				volumeProfile = volume.profile;
+				_volumeProfile = volume.profile;
 			}
 		}
 		else
@@ -444,19 +445,19 @@ public static class SettingManager
 
 	private static void UpdateResolutionData()
 	{
-		resolutions.Clear();
-		legalRefreshRates.Clear();
+		_resolutions.Clear();
+		_legalRefreshRates.Clear();
 		foreach (var r in Screen.resolutions)
 		{
 			var k = $"{r.width}x{r.height}";
 
-			if (!legalRefreshRates.ContainsKey(k))
+			if (!_legalRefreshRates.ContainsKey(k))
 			{
-				resolutions.Add(r);
-				legalRefreshRates.Add(k, new());
+				_resolutions.Add(r);
+				_legalRefreshRates.Add(k, new());
 			}
 
-			legalRefreshRates[k].Add(r.refreshRateRatio);
+			_legalRefreshRates[k].Add(r.refreshRateRatio);
 			//debugText.text += $"\n{r.width}x{r.height}@{r.refreshRateRatio}";
 		}
 	}
@@ -480,13 +481,13 @@ public static class SettingManager
 				await Task.Yield();
 			}
 
-			curResolution = new Resolution();
-			curRefreshRate = display.refreshRate;
-			curResolution.width = display.width;
-			curResolution.height = display.height;
-			curResolution.refreshRateRatio = display.refreshRate;
+			_currentResolution = new Resolution();
+			_currentRefreshRate = display.refreshRate;
+			_currentResolution.width = display.width;
+			_currentResolution.height = display.height;
+			_currentResolution.refreshRateRatio = display.refreshRate;
 
-			Screen.SetResolution(display.width, display.width, fullScreenMode, display.refreshRate);
+			Screen.SetResolution(display.width, display.width, _fullScreenMode, display.refreshRate);
 		}
 		else
 		{

@@ -27,7 +27,9 @@ public class SettingData : MonoBehaviour
 		public T Get()
 		{
 			if (!PlayerPrefs.HasKey(name))
+			{
 				SetToDefault();
+			}
 
 			return value;
 		}

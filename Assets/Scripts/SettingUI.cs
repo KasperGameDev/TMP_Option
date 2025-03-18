@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -8,20 +6,22 @@ using static SettingData;
 
 public class SettingUI : MonoBehaviour
 {
-	private TextMeshProUGUI label;
+	private TextMeshProUGUI _label;
 
 	private void Awake()
 	{
-		label = GetComponentInChildren<TextMeshProUGUI>();
+		_label = GetComponentInChildren<TextMeshProUGUI>();
 	}
 
 	public void Setup(Setting setting)
 	{
 		foreach (Transform child in transform)
+		{
 			child.gameObject.SetActive(false);
+		}
 
-		label.gameObject.SetActive(true);
-		label.SetText(setting.name);
+		_label.gameObject.SetActive(true);
+		_label.SetText(setting.name);
 		transform.name = $"Setting ({setting.name})";
 		setting.forceUpdate = () => Setup(setting);
 
