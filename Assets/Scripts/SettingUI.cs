@@ -6,11 +6,20 @@ using static SettingData;
 
 public class SettingUI : MonoBehaviour
 {
+	[SerializeField] 
+	private Button _resetButton;
+
 	private TextMeshProUGUI _label;
+	private Setting _setting;
 
 	private void Awake()
 	{
 		_label = GetComponentInChildren<TextMeshProUGUI>();
+	}
+
+	public void Reset()
+	{
+		_setting?.SetToDefault();
 	}
 
 	public void Setup(Setting setting)
@@ -20,6 +29,7 @@ public class SettingUI : MonoBehaviour
 			child.gameObject.SetActive(false);
 		}
 
+		_setting = setting;
 		_label.gameObject.SetActive(true);
 		_label.SetText(setting.name);
 		transform.name = $"Setting ({setting.name})";
@@ -65,6 +75,7 @@ public class SettingUI : MonoBehaviour
 
 		var label = slider.GetComponentInChildren<TextMeshProUGUI>();
 		slider.onValueChanged.AddListener(v => label.SetText(v.ToString("F1")));
+		slider.onValueChanged.AddListener(_ => _resetButton.gameObject.SetActive(true));
 		label.SetText(setting.value.ToString("F1"));
 	}
 
@@ -80,6 +91,7 @@ public class SettingUI : MonoBehaviour
 
 		var label = slider.GetComponentInChildren<TextMeshProUGUI>();
 		slider.onValueChanged.AddListener(v => label.SetText(v.ToString()));
+		slider.onValueChanged.AddListener(_ => _resetButton.gameObject.SetActive(true));
 		label.SetText(setting.value.ToString());
 	}
 

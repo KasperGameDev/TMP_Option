@@ -13,6 +13,7 @@ public class SettingData : MonoBehaviour
 			this.name = name;
 		}
 
+		public abstract void SetToDefault();
 		public abstract void Apply();
 	}
 
@@ -38,7 +39,7 @@ public class SettingData : MonoBehaviour
 			this.value = value;
 			onSave?.Invoke(value);
 		}
-		public void SetToDefault()
+		public override void SetToDefault()
 		{
 			Set(defaultValue);
 		}
