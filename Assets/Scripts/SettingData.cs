@@ -93,6 +93,22 @@ public class SettingData : MonoBehaviour
 		}
 	}
 
+	public class IntSliderSetting : Setting<int>
+	{
+		public int min = 0, max = 10;
+
+		public IntSliderSetting(string name) : base(name)
+		{
+			value = PlayerPrefs.GetInt(name);
+		}
+		public override void Set(int value)
+		{
+			value = Mathf.Clamp(value, min, max);
+			PlayerPrefs.SetFloat(name, value);
+			base.Set(value);
+		}
+	}
+
 	public class ButtonSetting : Setting<Action>
 	{
 		public string text;

@@ -31,6 +31,7 @@ public class SettingUI : MonoBehaviour
 			case ToggleSetting s: Setup(s); break;
 			case SliderSetting s: Setup(s); break;
 			case ButtonSetting s: Setup(s); break;
+			case IntSliderSetting s: Setup(s); break;
 			default: Debug.LogError($"Doesn't support {setting.GetType()}"); return;
 		}
 	}
@@ -61,6 +62,17 @@ public class SettingUI : MonoBehaviour
 		slider.maxValue = setting.max;
 		slider.value = setting.Get();
 		slider.onValueChanged.AddListener(v => setting.Set(v));
+	}
+
+	private void Setup(IntSliderSetting setting)
+	{
+		var slider = GetComponentInChildren<Slider>(true);
+		slider.gameObject.SetActive(true);
+		slider.minValue = setting.min;
+		slider.maxValue = setting.max;
+		slider.value = setting.Get();
+		slider.wholeNumbers = true;
+		slider.onValueChanged.AddListener(v => setting.Set((int)v));
 	}
 
 	private void Setup(ButtonSetting setting)

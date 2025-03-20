@@ -7,6 +7,8 @@ using static SettingData;
 public class SettingsMenu : MonoBehaviour
 {
 	[SerializeField] private Section _sectionPrefab;
+	[Space(5)]
+	[SerializeField] private FPSDisplay _fpsDisplay;
 	[SerializeField] private TextMeshProUGUI _debugText;
 	[SerializeField] private TextMeshProUGUI _titleText;
 

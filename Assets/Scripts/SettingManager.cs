@@ -8,7 +8,6 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
-using System.Text.RegularExpressions;
 
 public static class SettingManager
 {
@@ -252,6 +251,14 @@ public static class SettingManager
 		var shadowRes = Enum.GetValues(typeof(ShadowResolution)).Cast<ShadowResolution>().ToList();
 		var msaa = Enum.GetValues(typeof(MsaaQuality)).Cast<MsaaQuality>().ToList();
 
+		var textureResolutionSetting = new IntSliderSetting("Texture Resolution")
+		{
+			min = 0,
+			max = 5,
+			defaultValue = QualitySettings.globalTextureMipmapLimit,
+			onSave = v => QualitySettings.globalTextureMipmapLimit = v,
+		};
+
 		var shadowResolutionSetting = new OptionSetting("Shadow Resolution")
 		{
 			options = Enum.GetNames(typeof(ShadowResolution)).Select(r => $"{r}".Substring(1)).ToArray(),
@@ -301,6 +308,7 @@ public static class SettingManager
 
 		Settings["Graphics"] = new()
 		{
+			textureResolutionSetting,
 			shadowResolutionSetting,
 			shadowDistanceSetting,
 			softShadowsSetting,
@@ -501,3 +509,6 @@ public static class SettingManager
 	}
 	#endregion
 }
+
+
+//https://docs.unity3d.com/ScriptReference/QualitySettings-globalTextureMipmapLimit.html
