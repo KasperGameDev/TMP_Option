@@ -62,6 +62,10 @@ public class SettingUI : MonoBehaviour
 		slider.maxValue = setting.max;
 		slider.value = setting.Get();
 		slider.onValueChanged.AddListener(v => setting.Set(v));
+
+		var label = slider.GetComponentInChildren<TextMeshProUGUI>();
+		slider.onValueChanged.AddListener(v => label.SetText(v.ToString("F1")));
+		label.SetText(setting.value.ToString("F1"));
 	}
 
 	private void Setup(IntSliderSetting setting)
@@ -73,6 +77,10 @@ public class SettingUI : MonoBehaviour
 		slider.value = setting.Get();
 		slider.wholeNumbers = true;
 		slider.onValueChanged.AddListener(v => setting.Set((int)v));
+
+		var label = slider.GetComponentInChildren<TextMeshProUGUI>();
+		slider.onValueChanged.AddListener(v => label.SetText(v.ToString()));
+		label.SetText(setting.value.ToString());
 	}
 
 	private void Setup(ButtonSetting setting)
