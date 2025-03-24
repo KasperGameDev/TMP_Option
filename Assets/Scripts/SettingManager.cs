@@ -195,17 +195,19 @@ public static class SettingManager
 			vSyncSetting,
 		};
 
-		if (_volumeProfile.TryGet(out ColorAdjustments colorAdjustments))
+		if (_volumeProfile.TryGet(out LiftGammaGain lgg))
 		{
-			var brightnessSetting = new SliderSetting("Brightness")
+			var brightnessSetting = new SliderSetting("Gamma")
 			{
-				min = -5f,
-				max = 5f,
+				min = -1f,
+				max = 1f,
 				onSave = v =>
 				{
-					colorAdjustments.postExposure.value = v;
+					var vector = lgg.gamma.value;
+					vector.w = v;
+					lgg.gamma.Override(vector);
 				},
-				defaultValue = colorAdjustments.postExposure.value,
+				defaultValue = 0.0f,
 			};
 
 			Settings["Display"].Add(brightnessSetting);
