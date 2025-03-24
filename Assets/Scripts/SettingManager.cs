@@ -313,7 +313,7 @@ public static class SettingManager
 			shadowDistanceSetting,
 			softShadowsSetting,
 			msaaSetting,
-			fogModeSetting,
+			//fogModeSetting, // this doesn't really make sense to include tbh
 			fogSliderSetting,
 		};
 	}
