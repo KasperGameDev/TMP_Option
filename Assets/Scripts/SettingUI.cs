@@ -20,6 +20,8 @@ public class SettingUI : MonoBehaviour
 	public void Reset()
 	{
 		_setting?.SetToDefault();
+		_setting.forceUpdate?.Invoke();
+		_resetButton.gameObject.SetActive(false);
 	}
 
 	public void Setup(Setting setting)
