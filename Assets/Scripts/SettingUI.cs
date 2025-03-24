@@ -79,6 +79,7 @@ public class SettingUI : MonoBehaviour
 		slider.onValueChanged.AddListener(v => label.SetText(v.ToString("F1")));
 		slider.onValueChanged.AddListener(_ => _resetButton.gameObject.SetActive(true));
 		label.SetText(setting.value.ToString("F1"));
+		_resetButton.gameObject.SetActive(setting.value != setting.defaultValue);
 	}
 
 	private void Setup(IntSliderSetting setting)
@@ -95,6 +96,7 @@ public class SettingUI : MonoBehaviour
 		slider.onValueChanged.AddListener(v => label.SetText(v.ToString()));
 		slider.onValueChanged.AddListener(_ => _resetButton.gameObject.SetActive(true));
 		label.SetText(setting.value.ToString());
+		_resetButton.gameObject.SetActive(setting.value != setting.defaultValue);
 	}
 
 	private void Setup(ButtonSetting setting)

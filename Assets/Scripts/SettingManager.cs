@@ -253,17 +253,16 @@ public static class SettingManager
 		var shadowRes = Enum.GetValues(typeof(ShadowResolution)).Cast<ShadowResolution>().ToList();
 		var msaa = Enum.GetValues(typeof(MsaaQuality)).Cast<MsaaQuality>().ToList();
 
-		var textureResolutionSetting = new IntSliderSetting("Texture Resolution")
+		var textureResolutionSetting = new OptionSetting("Texture Resolution")
 		{
-			min = 0,
-			max = 5,
+			options = new[] { "Very High", "High", "Medium", "Low", "Very Low" },
 			defaultValue = QualitySettings.globalTextureMipmapLimit,
 			onSave = v => QualitySettings.globalTextureMipmapLimit = v,
 		};
 
 		var shadowResolutionSetting = new OptionSetting("Shadow Resolution")
 		{
-			options = Enum.GetNames(typeof(ShadowResolution)).Select(r => $"{r}".Substring(1)).ToArray(),
+			options = new[] { "Very Low", "Low", "Medium", "High", "Very High" }, //Enum.GetNames(typeof(ShadowResolution)).Select(r => $"{r}".Substring(1)).ToArray(),
 			onSave = v =>
 			{
 				UnityGraphicsHack.MainLightShadowResolution = shadowRes[v];
@@ -303,9 +302,9 @@ public static class SettingManager
 		var fogSliderSetting = new SliderSetting("Fog Distance")
 		{
 			min = 100f,
-			max = 1000f,
+			max = 500f,
 			onSave = v => RenderSettings.fogEndDistance = v,
-			defaultValue = 1000f,
+			defaultValue = 300f,
 		};
 
 		Settings["Graphics"] = new()
