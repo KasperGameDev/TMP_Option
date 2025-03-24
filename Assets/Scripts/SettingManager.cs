@@ -8,6 +8,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using ShadowResolution = UnityEngine.Rendering.Universal.ShadowResolution;
 using static SettingData;
+using System.Text.RegularExpressions;
 
 public static class SettingManager
 {
@@ -157,7 +158,10 @@ public static class SettingManager
 
 		var fullscreenSetting = new OptionSetting("Fullscreen Mode")
 		{
-			options = Enum.GetNames(typeof(FullScreenMode)),
+			options = 
+				Enum.GetNames(typeof(FullScreenMode))
+				.Select(n => Regex.Replace(n, "[A-Z]", " $0").Trim())
+				.ToArray(),
 			onSave = v =>
 			{
 				_fullScreenMode = (FullScreenMode)v;
