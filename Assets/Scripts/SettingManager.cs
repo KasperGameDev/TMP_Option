@@ -267,15 +267,15 @@ public static class SettingManager
 				UnityGraphicsHack.MainLightShadowResolution = shadowRes[v];
 				UnityGraphicsHack.AdditionalLightShadowResolution = shadowRes[v];
 			},
-			defaultValue = shadowRes.IndexOf(ShadowResolution._1024),
+			defaultValue = shadowRes.IndexOf(ShadowResolution._4096),
 		};
 
 		var shadowDistanceSetting = new SliderSetting("Shadow Distance")
 		{
-			min = 1f,
-			max = 500f,
+			min = 150f,
+			max = 450f,
 			onSave = v => data.shadowDistance = v,
-			defaultValue = 150f,
+			defaultValue = 450f,
 		};
 
 		var softShadowsSetting = new ToggleSetting("Soft Shadows")
