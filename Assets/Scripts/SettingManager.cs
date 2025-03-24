@@ -331,6 +331,13 @@ public static class SettingManager
 			return;
 		}
 
+		var ssao = new SSAOConfigurator();
+		var ssaoSetting = new ToggleSetting("SSAO")
+		{
+			onSave = ssao.SetActive,
+			defaultValue = true,
+		};
+
 		var bloomSetting = CreatePostProcessingSetting<Bloom>();
 		var chromeSetting = CreatePostProcessingSetting<ChromaticAberration>();
 		var depthOfFieldSetting = CreatePostProcessingSetting<DepthOfField>();
@@ -342,6 +349,7 @@ public static class SettingManager
 
 		Settings["Post Processing"] = new List<Setting>()
 		{
+			ssaoSetting,
 			bloomSetting,
 			chromeSetting,
 			depthOfFieldSetting,
