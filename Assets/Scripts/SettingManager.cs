@@ -242,6 +242,10 @@ public static class SettingManager
 				_fullScreenMode,
 				_currentRefreshRate);
 		}
+		string ResolutionToKey(Resolution res)
+		{
+			return $"{res.width}x{res.height}";
+		}
 	}
 
 	private static void CreateGraphicsSettings()
@@ -283,6 +287,16 @@ public static class SettingManager
 			defaultValue = 450f,
 		};
 
+		var castShadowsSetting = new ToggleSetting("Shadows On")
+		{
+			onSave = v =>
+			{
+				UnityGraphicsHack.MainLightCastShadows = v;
+				UnityGraphicsHack.AdditionalLightCastShadows = v;
+			},
+			defaultValue = true,
+		};
+
 		var softShadowsSetting = new ToggleSetting("Soft Shadows")
 		{
 			onSave = v => UnityGraphicsHack.SoftShadowsEnabled = v,
@@ -316,6 +330,7 @@ public static class SettingManager
 			textureResolutionSetting,
 			shadowResolutionSetting,
 			shadowDistanceSetting,
+			castShadowsSetting,
 			softShadowsSetting,
 			msaaSetting,
 			//fogModeSetting, // this doesn't really make sense to include tbh
@@ -515,13 +530,5 @@ public static class SettingManager
 			await Task.CompletedTask;
 		}
 	}
-	
-	private static string ResolutionToKey(Resolution res)
-	{
-		return $"{res.width}x{res.height}";
-	}
 	#endregion
 }
-
-
-//https://docs.unity3d.com/ScriptReference/QualitySettings-globalTextureMipmapLimit.html
