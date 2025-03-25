@@ -7,6 +7,12 @@ public class MainMenu : MonoBehaviour
 	[SerializeField]
 	private GameObject _settingsMenu;
 
+	private IEnumerator Start()
+	{
+		yield return null;
+		OpenMainMenu();
+	}
+
 	public void OpenMainMenu()
 	{
 		_settingsMenu.SetActive(false);
